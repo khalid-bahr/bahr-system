@@ -1,0 +1,21 @@
+{
+  "name": "bahr-system",
+  "version": "1.0.0",
+  "description": "نظام إدارة المالية والورديات للمطاعم — سيستم بحر (BAHR SYSTEM)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "keywords": [
+    "restaurant",
+    "pos",
+    "shifts",
+    "accounting",
+    "bahr-system"
+  ],
+  "author": "Bahr System",
+  "license": "ISC"
+}

@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سيستم بحر — النظام المالي وإدارة الورديات</title>
+  <link rel="icon" type="image/jpeg" href="logo.jpg">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- SheetJS (xlsx export) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 text-[13px]">
+
+  <!-- ========================================== -->
+  <!-- FULL SCREEN LOGIN SCREEN                  -->
+  <!-- ========================================== -->
+  <div id="view-login" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3">
+    <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
+      <div class="text-center space-y-1.5">
+        <div class="w-24 h-24 rounded-2xl bg-white border border-slate-200 overflow-hidden mx-auto shadow-md p-1 flex items-center justify-center">
+          <img src="logo.jpg" alt="لوقو سيستم بحر" class="w-full h-full object-contain">
+        </div>
+        <h2 class="text-base font-black text-slate-900">سيستم بحر (BAHR SYSTEM)</h2>
+        <p class="text-xs text-slate-500">نظام إدارة المالية ومطابقة الورديات للمطاعم</p>
+      </div>
+
+      <form id="form-login" onsubmit="handleLoginSubmit(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">اسم المستخدم:</label>
+          <input type="text" id="login-username" placeholder="أدخل اسم المستخدم..." required class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-slate-50 font-bold focus:ring-1 focus:ring-blue-500">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">كلمة المرور:</label>
+          <input type="password" id="login-password" placeholder="••••••••" required class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-slate-50 font-bold focus:ring-1 focus:ring-blue-500">
+        </div>
+
+        <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition shadow-sm flex items-center justify-center gap-1.5">
+          <i data-lucide="log-in" class="w-4 h-4"></i>
+          <span>تسجيل الدخول للنظام</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Top Clean Compact Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+    <div class="max-w-7xl mx-auto px-3 sm:px-5">
+      <div class="flex items-center justify-between h-13 py-1.5">
+        
+        <!-- Brand & Title -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 overflow-hidden shadow-xs flex-shrink-0 p-0.5 flex items-center justify-center">
+            <img src="logo.jpg" alt="لوقو سيستم بحر" class="w-full h-full object-contain">
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h1 class="text-xs sm:text-sm font-bold text-slate-900 leading-tight" id="nav-restaurant-name">مطعم الضيافة العُمانية</h1>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold border border-blue-200">سيستم بحر</span>
+            </div>
+            <p class="text-[10px] text-slate-400 leading-tight">إدارة الورديات والمصروفات</p>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="hidden md:flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200/80 text-xs font-medium">
+          <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn active px-2.5 py-1 rounded-md flex items-center gap-1 transition-all bg-white text-blue-600 font-bold shadow-xs">
+            <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+            لوحة التحكم
+          </button>
+          <button onclick="switchTab('shifts')" id="tab-btn-shifts" class="tab-btn px-2.5 py-1 rounded-md flex items-center gap-1 transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60">
+            <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
+            إغلاق الورديات
+          </button>
+          <button onclick="switchTab('expenses')" id="tab-btn-expenses" class="tab-btn px-2.5 py-1 rounded-md flex items-center gap-1 transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60">
+            <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+            سجل المصروفات
+          </button>
+          <button onclick="switchTab('summary')" id="tab-btn-summary" class="tab-btn px-2.5 py-1 rounded-md flex items-center gap-1 transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60">
+            <i data-lucide="calendar-check-2" class="w-3.5 h-3.5"></i>
+            ملخص الشهر
+          </button>
+          <button onclick="switchTab('settings')" id="tab-btn-settings" class="tab-btn px-2.5 py-1 rounded-md flex items-center gap-1 transition-all text-slate-600 hover:text-slate-900 hover:bg-white/60">
+            <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+            الإعدادات
+          </button>
+          <button onclick="switchTab('users')" id="tab-btn-users" class="tab-btn hidden px-2.5 py-1 rounded-md flex items-center gap-1 transition-all text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 font-bold">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-purple-600"></i>
+            <span>المستخدمين والصلاحيات</span>
+          </button>
+        </nav>
+
+        <!-- Right Actions & User Profile -->
+        <div class="flex items-center gap-2">
+          <!-- Active Shift Pill -->
+          <div id="active-shift-badge" class="hidden sm:flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="active-shift-text">وردية مفتوحة</span>
+          </div>
+
+          <button onclick="openModal('modal-new-expense')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-xs transition active:scale-95">
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+            <span>تسجيل مصروف</span>
+          </button>
+
+          <button onclick="openModal('modal-new-shift')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 border border-slate-300 transition active:scale-95">
+            <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-500"></i>
+            <span class="hidden sm:inline">وردية جديدة</span>
+          </button>
+
+          <!-- User Profile & Logout -->
+          <div id="user-profile-badge" class="flex items-center gap-1 bg-slate-100 py-1 px-2 rounded-lg border border-slate-200 text-xs">
+            <i data-lucide="user" class="w-3.5 h-3.5 text-blue-600"></i>
+            <span id="user-display-name" class="font-bold text-slate-800 text-[11px]">المدير العام</span>
+            <span id="user-role-badge" class="text-[9px] px-1 py-0.2 rounded bg-blue-100 text-blue-700 font-bold">مدير</span>
+            <button onclick="handleLogout()" class="text-slate-400 hover:text-rose-600 pr-1 transition" title="تسجيل الخروج">
+              <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Sub Navigation -->
+    <div class="md:hidden flex items-center justify-around bg-white border-t border-slate-200 py-1.5 text-[11px] text-slate-600 font-medium">
+      <button onclick="switchTab('dashboard')" class="flex flex-col items-center gap-0.5 py-0.5 px-2 text-blue-600 font-bold">
+        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+        <span>الرئيسية</span>
+      </button>
+      <button onclick="switchTab('shifts')" class="flex flex-col items-center gap-0.5 py-0.5 px-2">
+        <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
+        <span>الورديات</span>
+      </button>
+      <button onclick="switchTab('expenses')" class="flex flex-col items-center gap-0.5 py-0.5 px-2">
+        <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+        <span>المصروفات</span>
+      </button>
+      <button onclick="switchTab('summary')" class="flex flex-col items-center gap-0.5 py-0.5 px-2">
+        <i data-lucide="calendar-check-2" class="w-3.5 h-3.5"></i>
+        <span>الملخص</span>
+      </button>
+      <button onclick="switchTab('settings')" class="flex flex-col items-center gap-0.5 py-0.5 px-2">
+        <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+        <span>الإعدادات</span>
+      </button>
+      <button onclick="switchTab('users')" id="mobile-tab-btn-users" class="hidden flex flex-col items-center gap-0.5 py-0.5 px-2 text-purple-700 font-bold">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-purple-600"></i>
+        <span>الحسابات</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-5 py-3.5">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: DASHBOARD (لوحة التحكم)             -->
+    <!-- ========================================== -->
+    <div id="view-dashboard" class="tab-view space-y-3.5">
+      
+      <!-- Date Bar & Controls (Compact) -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 bg-white py-2 px-3.5 rounded-xl border border-slate-200 shadow-2xs">
+        <div class="flex items-center gap-2.5">
+          <div class="p-1.5 rounded-lg bg-blue-50 text-blue-600">
+            <i data-lucide="calendar" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h2 class="text-xs font-bold text-slate-800">بيانات اليوم والنشاط اللحظي</h2>
+            <p class="text-[11px] text-slate-500" id="dashboard-date-display">تاريخ اليوم: جار التحميل...</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <input type="date" id="dashboard-date-filter" onchange="loadDashboard()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-blue-500 focus:outline-none bg-slate-50 text-slate-700">
+          <button onclick="goToToday()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-lg border border-slate-300 font-semibold transition" title="الانتقال إلى اليوم">
+            اليوم
+          </button>
+        </div>
+      </div>
+
+      <!-- Top 4 Balanced Financial KPI Cards (Compact) -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        
+        <!-- Card 1: مبيعات اليوم -->
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <div class="flex items-center justify-between text-[11px] text-slate-500 font-semibold mb-1">
+            <span>مبيعات اليوم</span>
+            <span class="p-1 rounded-md bg-emerald-50 text-emerald-600"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i></span>
+          </div>
+          <div>
+            <div class="text-lg font-black text-slate-900" id="kpi-today-total-sales">0.00</div>
+            <div class="text-[10px] text-slate-400 mt-0.5 flex items-center justify-between">
+              <span>إجمالي الورديات</span>
+              <span class="app-currency">ر.ع</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: مصروفات اليوم -->
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <div class="flex items-center justify-between text-[11px] text-slate-500 font-semibold mb-1">
+            <span>مصاريف اليوم</span>
+            <span class="p-1 rounded-md bg-rose-50 text-rose-600"><i data-lucide="coins" class="w-3.5 h-3.5"></i></span>
+          </div>
+          <div>
+            <div class="text-lg font-black text-rose-600" id="kpi-today-total-exp">0.00</div>
+            <div class="text-[10px] text-slate-400 mt-0.5 flex items-center justify-between">
+              <span id="kpi-shifts-exp-breakdown">صباحية: 0 | مسائية: 0</span>
+              <span class="app-currency">ر.ع</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: مصروفات الشهر التراكمية -->
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <div class="flex items-center justify-between text-[11px] text-slate-500 font-semibold mb-1">
+            <span>مصروفات الشهر</span>
+            <span class="p-1 rounded-md bg-orange-50 text-orange-600"><i data-lucide="wallet" class="w-3.5 h-3.5"></i></span>
+          </div>
+          <div>
+            <div class="text-lg font-black text-slate-800" id="kpi-month-total-exp">0.00</div>
+            <div class="text-[10px] text-slate-400 mt-0.5 flex items-center justify-between">
+              <span>نقدي وتحويلات</span>
+              <span class="app-currency">ر.ع</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: إجمالي مبيعات الشهر -->
+        <div class="bg-white p-3 rounded-xl border border-blue-200 bg-blue-50/20 shadow-2xs flex flex-col justify-between">
+          <div class="flex items-center justify-between text-[11px] text-blue-800 font-bold mb-1">
+            <span>مبيعات الشهر</span>
+            <span class="p-1 rounded-md bg-blue-100 text-blue-700"><i data-lucide="badge-dollar-sign" class="w-3.5 h-3.5"></i></span>
+          </div>
+          <div>
+            <div class="text-lg font-black text-blue-700" id="kpi-month-total-sales">0.00</div>
+            <div class="text-[10px] text-slate-500 mt-0.5 flex items-center justify-between">
+              <span id="kpi-month-card">بطاقة: 0</span>
+              <span id="kpi-month-credit">آجل: 0</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Active Shift & Daily Shifts Grid (Compact) -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        
+        <!-- Live Shift Card (Compact) -->
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-slate-100">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <h3 class="text-xs font-bold text-slate-900">الوردية الجارية</h3>
+              </div>
+              <span id="live-shift-type-pill" class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                وردية نشطة
+              </span>
+            </div>
+
+            <div id="live-shift-content" class="space-y-2 text-xs">
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200/70 flex items-center justify-between">
+                <span class="text-[11px] text-slate-500">الكاشير المستلم:</span>
+                <h4 class="text-xs font-bold text-slate-800" id="live-cashier-name">أحمد</h4>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-[11px]">
+                <div class="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                  <span class="text-slate-500 block mb-0.5 text-[10px]">العهدة الافتتاحية:</span>
+                  <span class="font-bold text-slate-800" id="live-opening-custody">0.00</span>
+                </div>
+                <div class="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                  <span class="text-slate-500 block mb-0.5 text-[10px]">مبيعات الوردية:</span>
+                  <span class="font-bold text-emerald-600" id="live-total-sales">0.00</span>
+                </div>
+                <div class="p-2 rounded-lg bg-slate-50 border border-slate-100">
+                  <span class="text-slate-500 block mb-0.5 text-[10px]">المصروفات النقدية:</span>
+                  <span class="font-bold text-rose-600" id="live-expenses-cash">0.00</span>
+                </div>
+                <div class="p-2 rounded-lg bg-blue-50/60 border border-blue-200">
+                  <span class="text-blue-800 font-bold block mb-0.5 text-[10px]">النقدي المتوقع:</span>
+                  <span class="font-black text-blue-900" id="live-expected-cash">0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-3 mt-2.5 border-t border-slate-100 flex items-center gap-1.5">
+            <button id="btn-close-live-shift" onclick="triggerCloseLiveShift()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs transition shadow-2xs flex items-center justify-center gap-1">
+              <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+              <span>جرد وإغلاق الوردية</span>
+            </button>
+            <button onclick="openModal('modal-new-shift')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-1.5 rounded-lg border border-slate-200 transition" title="فتح وردية جديدة">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Today's Shifts List Table (Compact) -->
+        <div class="lg:col-span-2 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-slate-100">
+              <h3 class="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5 text-blue-600"></i>
+                ورديات اليوم ومطابقة الكاش
+              </h3>
+              <button onclick="switchTab('shifts')" class="text-[11px] text-blue-600 hover:text-blue-700 font-bold flex items-center gap-0.5">
+                <span>عرض الكل</span>
+                <i data-lucide="arrow-left" class="w-3 h-3"></i>
+              </button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-[11px] text-right">
+                <thead class="text-slate-500 bg-slate-50 rounded-lg">
+                  <tr>
+                    <th class="py-1.5 px-2 rounded-r-lg">الوردية</th>
+                    <th class="py-1.5 px-2">الكاشير</th>
+                    <th class="py-1.5 px-2">المبيعات</th>
+                    <th class="py-1.5 px-2">المتوقع</th>
+                    <th class="py-1.5 px-2">الموجود</th>
+                    <th class="py-1.5 px-2">الفرق</th>
+                    <th class="py-1.5 px-2 rounded-l-lg">الحالة</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-today-shifts-body" class="divide-y divide-slate-100 text-slate-700">
+                  <tr>
+                    <td colspan="7" class="text-center py-4 text-slate-400">جار تحميل بيانات الورديات...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Total Shortage / Overage Banner -->
+          <div class="mt-2.5 pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] bg-slate-50 p-2 rounded-lg border border-slate-200/70">
+            <span class="text-slate-600 font-semibold">مراقبة الشهر:</span>
+            <div class="flex items-center gap-3">
+              <span class="text-rose-600 font-bold flex items-center gap-1">
+                <i data-lucide="alert-circle" class="w-3 h-3"></i>
+                عجز: <span id="kpi-month-shortage" class="font-black">0.00</span>
+              </span>
+              <span class="text-blue-600 font-bold flex items-center gap-1">
+                <i data-lucide="trending-up" class="w-3 h-3"></i>
+                زيادة: <span id="kpi-month-overage" class="font-black">0.00</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Charts Row (Compact Height: h-44) -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <!-- Sales vs Expenses Chart -->
+        <div class="lg:col-span-2 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+          <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-100">
+            <h3 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+              <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-blue-600"></i>
+              تطور المبيعات والمصروفات خلال الشهر
+            </h3>
+            <span class="text-[10px] text-slate-400">يومياً</span>
+          </div>
+          <div class="h-44">
+            <canvas id="chart-sales-expenses"></canvas>
+          </div>
+        </div>
+
+        <!-- Expense Categories Distribution -->
+        <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+          <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-100">
+            <h3 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+              <i data-lucide="pie-chart" class="w-3.5 h-3.5 text-blue-600"></i>
+              توزيع المصروفات حسب التصنيف
+            </h3>
+          </div>
+          <div class="h-44 flex items-center justify-center">
+            <canvas id="chart-categories"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Expenses Table on Dashboard -->
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+        <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-slate-100">
+          <h3 class="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+            <i data-lucide="receipt" class="w-3.5 h-3.5 text-blue-600"></i>
+            آخر المصروفات المسجلة
+          </h3>
+          <button onclick="switchTab('expenses')" class="text-[11px] text-blue-600 hover:text-blue-700 font-bold flex items-center gap-0.5">
+            <span>كل المصروفات</span>
+            <i data-lucide="arrow-left" class="w-3 h-3"></i>
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-[11px] text-right">
+            <thead class="text-slate-500 bg-slate-50 rounded-lg">
+              <tr>
+                <th class="py-1.5 px-2 rounded-r-lg">التاريخ</th>
+                <th class="py-1.5 px-2">الوردية</th>
+                <th class="py-1.5 px-2">التصنيف</th>
+                <th class="py-1.5 px-2">البند والتفاصيل</th>
+                <th class="py-1.5 px-2">طريقة الدفع</th>
+                <th class="py-1.5 px-2">المبلغ</th>
+                <th class="py-1.5 px-2 rounded-l-lg">الملاحظات</th>
+              </tr>
+            </thead>
+            <tbody id="dashboard-recent-expenses-body" class="divide-y divide-slate-100 text-slate-700">
+              <tr>
+                <td colspan="7" class="text-center py-4 text-slate-400">جار تحميل المصروفات...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 2: SHIFTS (إغلاق الورديات والكاشير)      -->
+    <!-- ========================================== -->
+    <div id="view-shifts" class="tab-view hidden space-y-3.5">
+      
+      <!-- Header Controls -->
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
+            <i data-lucide="calculator" class="w-4 h-4 text-blue-600"></i>
+            إدارة ومطابقة إغلاق الورديات (Shift Reconciliation)
+          </h2>
+          <p class="text-[11px] text-slate-500 mt-0.5">مطابقة المبيعات، البطاقة، الآجل، النقدية، المصروفات، واحتساب العجز والزيادة</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <div class="flex items-center gap-1 bg-slate-50 border border-slate-300 rounded-lg px-1.5 py-0.5 text-xs">
+            <span class="text-slate-500 text-[11px] font-bold">اليوم:</span>
+            <input type="date" id="shifts-filter-date" onchange="onShiftsDateChange()" class="border-0 bg-transparent text-xs py-1 px-1 focus:outline-none text-slate-800 font-semibold">
+            <button type="button" onclick="clearShiftsDateFilter()" class="text-[11px] text-slate-400 hover:text-blue-600 px-1 font-bold" title="إلغاء والعودة لعرض الشهر">✕</button>
+          </div>
+
+          <input type="month" id="shifts-filter-month" onchange="onShiftsMonthChange()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50 text-slate-700">
+          
+          <button onclick="exportShiftsToExcel()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 border border-slate-300 transition">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span>تصدير إكسيل</span>
+          </button>
+
+          <button onclick="openModal('modal-new-shift')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-2xs transition">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>فتح وردية جديدة</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Clean Explainer Banner -->
+      <div class="bg-slate-100/90 text-slate-700 p-2.5 rounded-lg text-[11px] flex flex-wrap items-center justify-between gap-2 border border-slate-200">
+        <div class="flex items-center gap-1.5">
+          <i data-lucide="info" class="w-3.5 h-3.5 text-blue-600"></i>
+          <span>
+            <strong>المعادلة:</strong> النقدي = المبيعات - البطاقة - الآجل | المتوقع = (النقدي + العهدة) - مصاريف الوردية النقدية | الفرق = الموجود - المتوقع
+          </span>
+        </div>
+        <div class="flex items-center gap-2 font-semibold text-[10px]">
+          <span class="inline-block px-1.5 py-0.2 rounded badge-matched">متطابق (0)</span>
+          <span class="inline-block px-1.5 py-0.2 rounded badge-shortage">عجز (-)</span>
+          <span class="inline-block px-1.5 py-0.2 rounded badge-overage">زيادة (+)</span>
+        </div>
+      </div>
+
+      <!-- Main Shifts Table -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-[11px] text-right border-collapse">
+            <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+              <tr>
+                <th class="py-2 px-2.5">التاريخ</th>
+                <th class="py-2 px-2.5">الوردية</th>
+                <th class="py-2 px-2.5">الكاشير</th>
+                <th class="py-2 px-2.5">المبيعات</th>
+                <th class="py-2 px-2.5">البطاقة</th>
+                <th class="py-2 px-2.5">الآجل</th>
+                <th class="py-2 px-2.5">النقدي</th>
+                <th class="py-2 px-2.5">المصروفات</th>
+                <th class="py-2 px-2.5">المتوقع</th>
+                <th class="py-2 px-2.5">الموجود</th>
+                <th class="py-2 px-2.5">العهدة</th>
+                <th class="py-2 px-2.5">الفرق</th>
+                <th class="py-2 px-2.5">الحالة</th>
+                <th class="py-2 px-2.5 text-center">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="shifts-table-body" class="divide-y divide-slate-100 text-slate-700">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 3: EXPENSES (سجل المصروفات اليومية)     -->
+    <!-- ========================================== -->
+    <div id="view-expenses" class="tab-view hidden space-y-3.5">
+      
+      <!-- Top Actions & Filters -->
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <i data-lucide="receipt" class="w-4 h-4 text-blue-600"></i>
+              سجل المصروفات اليومية والتشغيلية
+            </h2>
+            <p class="text-[11px] text-slate-500 mt-0.5">تسجيل وتصنيف المصروفات، سلف الموظفين، فواتير المشتريات والمرافق</p>
+          </div>
+
+          <div class="flex items-center gap-2 w-full md:w-auto">
+            <button onclick="exportExpensesToExcel()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 border border-slate-300 transition">
+              <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>تصدير إكسيل</span>
+            </button>
+
+            <button onclick="openModal('modal-new-expense')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-2xs transition">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+              <span>تسجيل مصروف جديد</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Date Presets -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-500 text-[11px] font-semibold">تصفية سريعة:</span>
+            <button type="button" onclick="setExpDatePreset('today')" id="btn-exp-preset-today" class="px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-[11px] font-bold transition">
+              اليوم
+            </button>
+            <button type="button" onclick="setExpDatePreset('yesterday')" id="btn-exp-preset-yesterday" class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 text-[11px] font-medium transition">
+              أمس
+            </button>
+            <button type="button" onclick="setExpDatePreset('month')" id="btn-exp-preset-month" class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 text-[11px] font-medium transition">
+              هذا الشهر
+            </button>
+            <button type="button" onclick="setExpDatePreset('all')" id="btn-exp-preset-all" class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 text-[11px] font-medium transition">
+              الكل
+            </button>
+          </div>
+          <span id="exp-current-filter-badge" class="text-[11px] text-blue-700 font-bold bg-blue-50/80 px-2.5 py-0.5 rounded-full border border-blue-200">
+            عرض كل الشهر
+          </span>
+        </div>
+
+        <!-- Filter Row -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-[11px]">
+          <div>
+            <label class="block text-slate-600 font-bold mb-0.5 flex items-center justify-between">
+              <span>البحث باليوم:</span>
+              <button type="button" onclick="clearExpDayFilter()" class="text-[10px] text-blue-600 hover:underline" title="إلغاء وتفريغ اليوم">تفريغ</button>
+            </label>
+            <input type="date" id="filter-exp-date" onchange="onExpDateChange()" class="w-full border border-slate-300 rounded-lg px-2 py-1 bg-white text-slate-800 font-semibold focus:ring-1 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-slate-500 mb-0.5">أو بالشهر:</label>
+            <input type="month" id="filter-exp-month" onchange="onExpMonthChange()" class="w-full border border-slate-300 rounded-lg px-2 py-1 bg-slate-50 text-slate-700">
+          </div>
+          <div>
+            <label class="block text-slate-500 mb-0.5">الوردية:</label>
+            <select id="filter-exp-shift" onchange="loadExpenses()" class="w-full border border-slate-300 rounded-lg px-2 py-1 bg-slate-50">
+              <option value="">جميع الورديات</option>
+              <option value="صباحية">صباحية</option>
+              <option value="مسائية">مسائية</option>
+              <option value="عام">عام</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-500 mb-0.5">التصنيف:</label>
+            <select id="filter-exp-cat" onchange="loadExpenses()" class="w-full border border-slate-300 rounded-lg px-2 py-1 bg-slate-50">
+              <option value="">جميع التصنيفات</option>
+              <option value="مرافق">مرافق</option>
+              <option value="مشتريات">مشتريات</option>
+              <option value="رواتب وأجور">رواتب وأجور</option>
+              <option value="مواد خام">مواد خام</option>
+              <option value="طعام">طعام</option>
+              <option value="نظافة">نظافة</option>
+              <option value="صيانة ومعدات">صيانة ومعدات</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-500 mb-0.5">طريقة الدفع:</label>
+            <select id="filter-exp-method" onchange="loadExpenses()" class="w-full border border-slate-300 rounded-lg px-2 py-1 bg-slate-50">
+              <option value="">جميع الطرق</option>
+              <option value="نقدي">نقدي (كاشير)</option>
+              <option value="تحويل">تحويل بنكي</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-500 mb-0.5">بحث بالنص:</label>
+            <input type="text" id="filter-exp-search" oninput="filterExpensesTable()" placeholder="ابحث بالبند أو البيان..." class="w-full border border-slate-300 rounded-lg px-2 py-1 bg-slate-50">
+          </div>
+        </div>
+
+        <!-- Filter Total Summary -->
+        <div class="flex items-center justify-between text-xs bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg border border-slate-200">
+          <span class="font-semibold text-[11px]">المصروفات المعروضة:</span>
+          <div class="flex items-center gap-3 font-bold text-[11px]">
+            <span>العدد: <span id="filtered-exp-count" class="text-blue-600">0</span></span>
+            <span>الإجمالي: <span id="filtered-exp-sum" class="text-xs font-black text-rose-600">0.00</span> <span class="app-currency">ر.ع</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expenses Table -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-[11px] text-right border-collapse">
+            <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+              <tr>
+                <th class="py-2 px-2.5">م</th>
+                <th class="py-2 px-2.5">التاريخ</th>
+                <th class="py-2 px-2.5">الوردية</th>
+                <th class="py-2 px-2.5">الوقت</th>
+                <th class="py-2 px-2.5">التصنيف</th>
+                <th class="py-2 px-2.5">البند</th>
+                <th class="py-2 px-2.5">التفاصيل / البيان</th>
+                <th class="py-2 px-2.5">طريقة الدفع</th>
+                <th class="py-2 px-2.5">المبلغ</th>
+                <th class="py-2 px-2.5">فاتورة</th>
+                <th class="py-2 px-2.5">ملاحظات</th>
+                <th class="py-2 px-2.5 text-center">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="expenses-table-body" class="divide-y divide-slate-100 text-slate-700">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 4: MONTHLY SUMMARY (ملخص الشهر)         -->
+    <!-- ========================================== -->
+    <div id="view-summary" class="tab-view hidden space-y-3.5">
+      
+      <!-- Month Controls -->
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
+            <i data-lucide="calendar-check-2" class="w-4 h-4 text-blue-600"></i>
+            ملخص الأداء المالي الشهري التراكمي
+          </h2>
+          <p class="text-[11px] text-slate-500 mt-0.5">تجميع شامل لجميع أيام الشهر مع حساب المبيعات والمصروفات وحالات الورديات</p>
+        </div>
+
+        <div class="flex items-center gap-2 w-full md:w-auto">
+          <input type="month" id="summary-month-input" onchange="loadMonthlySummary()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50 text-slate-700 font-semibold">
+          <button onclick="exportMonthlySummaryToExcel()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 border border-slate-300 transition">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span>تصدير إكسيل</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Top Summary Cards (Compact 4-Card Row) -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        
+        <!-- إجمالي المبيعات -->
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+          <span class="text-[11px] text-slate-500 font-semibold block mb-0.5">إجمالي المبيعات</span>
+          <div class="text-lg font-black text-slate-900" id="sum-card-sales">0.00</div>
+          <div class="text-[10px] text-slate-400 mt-0.5 flex justify-between">
+            <span id="sum-card-card">بطاقة: 0.00</span>
+            <span id="sum-card-credit">آجل: 0.00</span>
+          </div>
+        </div>
+
+        <!-- إجمالي المصروفات -->
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+          <span class="text-[11px] text-slate-500 font-semibold block mb-0.5">إجمالي المصروفات</span>
+          <div class="text-lg font-black text-rose-600" id="sum-card-expenses">0.00</div>
+          <span class="text-[10px] text-slate-400 app-currency">ر.ع</span>
+        </div>
+
+        <!-- النقدي المتوقع vs الفعلي -->
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+          <span class="text-[11px] text-slate-500 font-semibold block mb-0.5">النقدي المتوقع / الفعلي</span>
+          <div class="text-lg font-black text-slate-800" id="sum-card-actual">0.00</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">
+            <span>المتوقع: </span><span id="sum-card-expected">0.00</span>
+          </div>
+        </div>
+
+        <!-- إجمالي العجز والزيادة -->
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+          <span class="text-[11px] text-slate-500 font-semibold block mb-0.5">العجز والزيادة</span>
+          <div class="flex items-center gap-2">
+            <div>
+              <span class="text-[9px] text-rose-500 font-bold block">عجز:</span>
+              <span class="text-base font-black text-rose-600" id="sum-card-shortage">0.00</span>
+            </div>
+            <div class="border-r border-slate-200 pr-2">
+              <span class="text-[9px] text-blue-500 font-bold block">زيادة:</span>
+              <span class="text-base font-black text-blue-600" id="sum-card-overage">0.00</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Monthly Detailed Table -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-[11px] text-right border-collapse">
+            <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+              <tr>
+                <th class="py-2 px-2.5">التاريخ</th>
+                <th class="py-2 px-2.5 text-center">الورديات</th>
+                <th class="py-2 px-2.5">المبيعات</th>
+                <th class="py-2 px-2.5">البطاقة</th>
+                <th class="py-2 px-2.5">الآجل</th>
+                <th class="py-2 px-2.5">النقدي</th>
+                <th class="py-2 px-2.5">المصروفات</th>
+                <th class="py-2 px-2.5">المتوقع</th>
+                <th class="py-2 px-2.5">الموجود</th>
+                <th class="py-2 px-2.5">العهدة</th>
+                <th class="py-2 px-2.5">الفرق</th>
+                <th class="py-2 px-2.5">الحالة</th>
+              </tr>
+            </thead>
+            <tbody id="summary-table-body" class="divide-y divide-slate-100 text-slate-700">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 5: SETTINGS (الإعدادات وقاعدة البيانات) -->
+    <!-- ========================================== -->
+    <div id="view-settings" class="tab-view hidden space-y-3.5">
+      
+      <div class="max-w-2xl mx-auto space-y-3.5">
+        <!-- Settings Form -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3.5">
+          <h2 class="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
+            <i data-lucide="settings" class="w-4 h-4 text-blue-600"></i>
+            إعدادات النظام والمطعم
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">اسم المطعم أو المنشأة:</label>
+              <input type="text" id="setting-restaurant-name" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-blue-500">
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-600 mb-1">العملة الافتراضية:</label>
+              <select id="setting-currency" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-blue-500">
+                <option value="ر.ع">ريال عماني (ر.ع)</option>
+                <option value="ج.م">جنيه مصري (ج.م)</option>
+                <option value="ر.س">ريال سعودي (ر.س)</option>
+                <option value="د.إ">درهم إماراتي (د.إ)</option>
+                <option value="$">دولار ($)</option>
+              </select>
+            </div>
+
+            <div class="col-span-1 md:col-span-2">
+              <label class="block font-bold text-slate-600 mb-1">اسم المدير أو المشرف العام:</label>
+              <input type="text" id="setting-manager-name" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-1 focus:ring-blue-500">
+            </div>
+          </div>
+
+          <button onclick="saveSettings()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-2xs transition">
+            حفظ التغييرات
+          </button>
+        </div>
+
+        <!-- Multi-Device Connection & Online Access Card -->
+        <div class="bg-gradient-to-br from-blue-50/70 to-indigo-50/50 p-4 rounded-xl border border-blue-200 shadow-2xs space-y-3">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-xs">
+              <i data-lucide="wifi" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h3 class="text-xs sm:text-sm font-bold text-slate-900">ربط وتشغيل الأجهزة (مجاناً 100%)</h3>
+              <p class="text-[11px] text-slate-600">أي جهاز (موبايل، تابلت، كمبيوتر) يدخل باليوزر والباسوورد وتحديث البيانات لحظي للجميع</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+            <!-- Method 1: Local Network -->
+            <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-2xs space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-800 text-[11px] flex items-center gap-1">
+                  <i data-lucide="router" class="w-3.5 h-3.5 text-emerald-600"></i>
+                  1. شبكة المطعم المحلية (Wi-Fi)
+                </span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold">داخلي مجاني</span>
+              </div>
+              <p class="text-[10px] text-slate-500">افتح متصفح الموبايل أو التابلت المتصل بنفس واي فاي المطعم واكتب:</p>
+              <div class="bg-slate-100 p-1.5 rounded font-mono text-[11px] font-bold text-blue-700 text-center select-all border border-slate-200">
+                http://192.168.68.107:3300
+              </div>
+            </div>
+
+            <!-- Method 2: Online Tunnel -->
+            <div class="bg-white p-3 rounded-lg border border-blue-100 shadow-2xs space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-800 text-[11px] flex items-center gap-1">
+                  <i data-lucide="globe" class="w-3.5 h-3.5 text-blue-600"></i>
+                  2. عبر الإنترنت من أي مكان (Cloudflare)
+                </span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold">خارجي مشفر</span>
+              </div>
+              <p class="text-[10px] text-slate-500">رابط HTTPS مشفر لصاحب المطعم للمتابعة من المنزل باليوزر والباسوورد:</p>
+              <div class="bg-slate-100 p-1.5 rounded font-mono text-[11px] font-bold text-blue-700 text-center select-all border border-slate-200">
+                تشغيل نفق سحابي مجاني بنقرة واحدة
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Database & Backup Management -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-2.5">
+          <h3 class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+            <i data-lucide="database" class="w-4 h-4 text-blue-600"></i>
+            إدارة قاعدة البيانات
+          </h3>
+          <p class="text-[11px] text-slate-500">
+            قاعدة البيانات محلية مشفرة وسريعة جداً داخل ملف SQLite مستقل، يمكنك استعادة بيانات الشيتات الأصلية متى شئت.
+          </p>
+
+          <div class="flex flex-wrap items-center gap-2 pt-1">
+            <button onclick="resetDatabase()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition border border-rose-300">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-600"></i>
+              <span>تفريغ وتصفير قاعدة البيانات للتشغيل الفعلي</span>
+            </button>
+            <button onclick="quickSeedDemo()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition border border-slate-300">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-500"></i>
+              <span>استعادة بيانات تجريبية</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 6: USERS (خاص بصاحب المطعم فقط - Owner) -->
+    <!-- ========================================== -->
+    <div id="view-users" class="tab-view hidden space-y-3.5">
+      
+      <!-- Owner Premium Header Banner -->
+      <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white p-4 rounded-xl shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border border-purple-800/40">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-amber-400 border border-white/20 shadow-xs">
+            <i data-lucide="crown" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-sm sm:text-base font-black text-white">إدارة الحسابات والصلاحيات (خاص بصاحب المطعم)</h2>
+              <span class="text-[9px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 font-bold">حساب المالك فقط</span>
+            </div>
+            <p class="text-[11px] text-purple-200 mt-0.5">تحكم حصري لإنشاء وتعديل حسابات الكاشير والمشرفين وتحديد صلاحية كل جهاز في المطعم</p>
+          </div>
+        </div>
+
+        <button onclick="openModal('modal-new-user')" class="bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm transition active:scale-95">
+          <i data-lucide="user-plus" class="w-4 h-4"></i>
+          <span>+ إضافة حساب جديد</span>
+        </button>
+      </div>
+
+      <!-- Quick Roles Explanation -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="p-1 rounded bg-emerald-100 text-emerald-800"><i data-lucide="user" class="w-3.5 h-3.5"></i></span>
+            <strong class="text-slate-800 text-[11px]">حساب الكاشير (Cashier)</strong>
+          </div>
+          <p class="text-[10px] text-slate-500">مخصص لأجهزة الكاشير في الصالة. يسجل الورديات ومصاريفها فقط، ومحجوب عنه تماماً أرباح الشهر والإعدادات وحذف السجلات.</p>
+        </div>
+
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="p-1 rounded bg-blue-100 text-blue-800"><i data-lucide="user-cog" class="w-3.5 h-3.5"></i></span>
+            <strong class="text-slate-800 text-[11px]">حساب المشرف / المدير (Admin)</strong>
+          </div>
+          <p class="text-[10px] text-slate-500">مخصص لمدير الفرع. يتابع العمليات اليومية، إغلاقات الورديات، الفواتير، ومحجوب عنه إدارة الحسابات الحساسة.</p>
+        </div>
+
+        <div class="bg-white p-3 rounded-xl border border-purple-200 bg-purple-50/30 shadow-2xs">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="p-1 rounded bg-purple-100 text-purple-800"><i data-lucide="crown" class="w-3.5 h-3.5"></i></span>
+            <strong class="text-purple-900 text-[11px]">حساب صاحب المطعم (Owner)</strong>
+          </div>
+          <p class="text-[10px] text-slate-500">صلاحية مراقبة شاملة ولحظية لجميع الحسابات، وصلاحية حصرية لإنشاء وحذف الحسابات وتوزيع الصلاحيات.</p>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <h3 class="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+            <i data-lucide="users" class="w-4 h-4 text-purple-600"></i>
+            الحسابات المسجلة وموزعة الصلاحيات
+          </h3>
+          <span class="text-[11px] text-slate-500 font-semibold" id="users-count-badge">عدد المستخدمين: -</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-[11px] text-right border-collapse">
+            <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-3">اسم المستخدم للدخول</th>
+                <th class="py-2.5 px-3">الاسم الظاهر بالكامل</th>
+                <th class="py-2.5 px-3">الصلاحية (الدور)</th>
+                <th class="py-2.5 px-3">تاريخ الإنشاء</th>
+                <th class="py-2.5 px-3 text-center">إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body" class="divide-y divide-slate-100 text-slate-700">
+              <tr>
+                <td colspan="5" class="text-center py-6 text-slate-400">جار تحميل الحسابات...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL: NEW EXPENSE (تسجيل مصروف جديد)       -->
+  <!-- ========================================== -->
+  <div id="modal-new-expense" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-white w-full max-w-md rounded-xl shadow-xl border border-slate-200 overflow-hidden">
+      
+      <div class="bg-slate-50 border-b border-slate-200 p-3 flex items-center justify-between">
+        <h3 class="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+          <i data-lucide="receipt" class="w-4 h-4 text-blue-600"></i>
+          تسجيل مصروف جديد
+        </h3>
+        <button onclick="closeModal('modal-new-expense')" class="text-slate-400 hover:text-slate-600 p-1 rounded-md">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="form-new-expense" onsubmit="handleNewExpenseSubmit(event)" class="p-4 space-y-2.5 text-xs">
+        
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-0.5">التاريخ:</label>
+            <input type="date" id="exp-date" required class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-0.5">الوقت:</label>
+            <input type="time" id="exp-time" required class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-0.5">الوردية:</label>
+            <select id="exp-shift" required class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50">
+              <option value="صباحية">صباحية</option>
+              <option value="مسائية">مسائية</option>
+              <option value="عام">عام</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-0.5">طريقة الدفع:</label>
+            <select id="exp-method" required class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50 font-bold text-slate-800">
+              <option value="نقدي">نقدي (كاشير الوردية)</option>
+              <option value="تحويل">تحويل بنكي</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-0.5">تصنيف المصروف:</label>
+            <select id="exp-category" onchange="updateItemsDropdown()" required class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50">
+              <option value="مرافق">مرافق (كهرباء، ماء...)</option>
+              <option value="مشتريات">مشتريات (خضار، دواجن...)</option>
+              <option value="رواتب وأجور">رواتب وأجور (سلف، رواتب)</option>
+              <option value="مواد خام">مواد خام (أرز، زيوت...)</option>
+              <option value="طعام">طعام وضيافة</option>
+              <option value="نظافة">نظافة ومستهلكات</option>
+              <option value="صيانة ومعدات">صيانة ومعدات</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-0.5">بند المصروف:</label>
+            <input type="text" id="exp-item" placeholder="مثال: كهرباء، سلفه..." required class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-0.5">المبلغ (<span class="app-currency">ر.ع</span>):</label>
+          <input type="number" step="0.01" min="0.01" id="exp-amount" placeholder="0.00" required class="w-full border border-slate-300 rounded-lg p-2 text-sm font-black text-slate-900 bg-slate-50">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-0.5">البيان والتفاصيل التوضيحية:</label>
+          <input type="text" id="exp-details" placeholder="مثال: صالة علوي، سلفة شيف شاهد..." class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-0.5">ملاحظات إضافية (أو حساب البنك):</label>
+          <input type="text" id="exp-notes" placeholder="مثال: من حساب بنك أمان م. شادي..." class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50">
+        </div>
+
+        <!-- Receipt Image Upload -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-0.5">إرفاق صورة الفاتورة (اختياري):</label>
+          <div class="flex items-center gap-2">
+            <input type="file" id="exp-image" accept="image/*" onchange="previewReceipt(event)" class="text-[11px] text-slate-500 file:mr-1 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            <div id="receipt-preview-container" class="hidden">
+              <img id="receipt-preview-thumb" src="" class="w-8 h-8 object-cover rounded border border-slate-300 cursor-pointer" onclick="openReceiptModal(this.src)">
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-3 flex items-center justify-end gap-1.5 border-t border-slate-100">
+          <button type="button" onclick="closeModal('modal-new-expense')" class="px-3 py-1.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-100 transition text-xs">إلغاء</button>
+          <button type="submit" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-2xs text-xs">حفظ المصروف</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- MODAL: OPEN SHIFT (فتح وردية جديدة)         -->
+  <!-- ========================================== -->
+  <div id="modal-new-shift" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-white w-full max-w-sm rounded-xl shadow-xl border border-slate-200 overflow-hidden">
+      
+      <div class="bg-slate-50 border-b border-slate-200 p-3 flex items-center justify-between">
+        <h3 class="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+          <i data-lucide="clock" class="w-4 h-4 text-blue-600"></i>
+          بدء وفتح وردية جديدة
+        </h3>
+        <button onclick="closeModal('modal-new-shift')" class="text-slate-400 hover:text-slate-600 p-1 rounded-md">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="form-new-shift" onsubmit="handleNewShiftSubmit(event)" class="p-4 space-y-2.5 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-0.5">تاريخ الوردية:</label>
+          <input type="date" id="shift-date" required class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-0.5">نوع الوردية:</label>
+          <select id="shift-type" required class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50 font-bold">
+            <option value="صباحية">وردية صباحية</option>
+            <option value="مسائية">وردية مسائية</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-0.5">اسم الكاشير المستلم:</label>
+          <input type="text" id="shift-cashier" placeholder="مثال: أحمد، محمود..." required class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50 font-bold">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-0.5">العهدة الافتتاحية (<span class="app-currency">ر.ع</span>):</label>
+          <input type="number" step="0.01" min="0" id="shift-custody" value="0.00" class="w-full border border-slate-300 rounded-lg p-2 text-sm font-black text-slate-900 bg-slate-50">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-0.5">ملاحظات افتتاحية:</label>
+          <input type="text" id="shift-notes" placeholder="ملاحظات تسليم الوردية..." class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50">
+        </div>
+
+        <div class="pt-3 flex items-center justify-end gap-1.5 border-t border-slate-100">
+          <button type="button" onclick="closeModal('modal-new-shift')" class="px-3 py-1.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-100 transition text-xs">إلغاء</button>
+          <button type="submit" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-2xs text-xs">تأكيد البدء</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- MODAL: CLOSE SHIFT RECONCILIATION WIZARD   -->
+  <!-- ========================================== -->
+  <div id="modal-close-shift" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-white w-full max-w-lg rounded-xl shadow-xl border border-slate-200 overflow-hidden my-4">
+      
+      <div class="bg-slate-50 border-b border-slate-200 p-3 flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+            <i data-lucide="calculator" class="w-4 h-4 text-blue-600"></i>
+            مطابقة وإغلاق الوردية
+          </h3>
+          <p class="text-[10px] text-slate-500 mt-0.5" id="close-modal-shift-info">وردية: - | كاشير: -</p>
+        </div>
+        <button onclick="closeModal('modal-close-shift')" class="text-slate-400 hover:text-slate-600 p-1 rounded-md">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="form-close-shift" onsubmit="handleCloseShiftSubmit(event)" class="p-4 space-y-2.5 text-xs">
+        <input type="hidden" id="close-shift-id">
+
+        <!-- Sales Breakdown Inputs -->
+        <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+          <h4 class="font-bold text-slate-800 text-[11px] flex items-center gap-1">
+            <i data-lucide="badge-dollar-sign" class="w-3.5 h-3.5 text-blue-600"></i>
+            إدخال مبيعات الوردية
+          </h4>
+
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[10px] text-slate-600 mb-0.5">إجمالي المبيعات:</label>
+              <input type="number" step="0.01" min="0" id="close-total-sales" oninput="calculateClosingForm()" required class="w-full border border-slate-300 rounded-md p-1.5 text-xs font-bold bg-white text-slate-900">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-600 mb-0.5">البطاقة (الشبكة):</label>
+              <input type="number" step="0.01" min="0" id="close-card-sales" oninput="calculateClosingForm()" required class="w-full border border-slate-300 rounded-md p-1.5 text-xs font-bold bg-white text-slate-900">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-600 mb-0.5">الآجل:</label>
+              <input type="number" step="0.01" min="0" id="close-credit-sales" oninput="calculateClosingForm()" required class="w-full border border-slate-300 rounded-md p-1.5 text-xs font-bold bg-white text-slate-900">
+            </div>
+          </div>
+
+          <div class="pt-1.5 flex items-center justify-between text-slate-600 border-t border-slate-200 text-[11px] font-bold">
+            <span>المبيعات النقدية:</span>
+            <span class="text-xs font-black text-slate-900" id="close-calc-cash-sales">0.00</span>
+          </div>
+        </div>
+
+        <!-- Expenses & Expected Cash -->
+        <div class="grid grid-cols-3 gap-2 text-[11px]">
+          <div class="p-2 bg-slate-50 rounded-lg border border-slate-200">
+            <span class="text-slate-500 block mb-0.5 text-[10px]">العهدة:</span>
+            <span class="font-bold text-slate-800" id="close-calc-custody">0.00</span>
+          </div>
+
+          <div class="p-2 bg-rose-50/50 rounded-lg border border-rose-200">
+            <span class="text-rose-700 block mb-0.5 text-[10px]">مصاريف نقدية:</span>
+            <span class="font-bold text-rose-800" id="close-calc-expenses">0.00</span>
+          </div>
+
+          <div class="p-2 bg-blue-50/70 border border-blue-200 rounded-lg">
+            <span class="text-blue-800 font-bold block mb-0.5 text-[10px]">النقدي المتوقع:</span>
+            <span class="font-black text-blue-900 text-xs" id="close-calc-expected">0.00</span>
+          </div>
+        </div>
+
+        <!-- Cash Drawer Actual Counting -->
+        <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-slate-800 text-[11px] flex items-center gap-1">
+              <i data-lucide="wallet" class="w-3.5 h-3.5 text-blue-600"></i>
+              العد الفعلي للنقود بالدرج
+            </h4>
+            <button type="button" onclick="toggleDenominations()" class="text-blue-600 hover:text-blue-700 font-bold flex items-center gap-0.5 text-[10px]">
+              <i data-lucide="calculator" class="w-3 h-3"></i>
+              <span>حاسبة الفئات</span>
+            </button>
+          </div>
+
+          <!-- Denomination Quick Counter -->
+          <div id="denom-box" class="hidden grid grid-cols-3 sm:grid-cols-6 gap-1.5 p-2 bg-white rounded-lg border border-slate-200">
+            <div class="text-center">
+              <label class="block text-[9px] text-slate-500 font-bold mb-0.5">فئة 50</label>
+              <input type="number" min="0" oninput="calcDenoms()" class="denom-input w-full border border-slate-300 rounded p-1 text-center text-xs" data-val="50">
+            </div>
+            <div class="text-center">
+              <label class="block text-[9px] text-slate-500 font-bold mb-0.5">فئة 20</label>
+              <input type="number" min="0" oninput="calcDenoms()" class="denom-input w-full border border-slate-300 rounded p-1 text-center text-xs" data-val="20">
+            </div>
+            <div class="text-center">
+              <label class="block text-[9px] text-slate-500 font-bold mb-0.5">فئة 10</label>
+              <input type="number" min="0" oninput="calcDenoms()" class="denom-input w-full border border-slate-300 rounded p-1 text-center text-xs" data-val="10">
+            </div>
+            <div class="text-center">
+              <label class="block text-[9px] text-slate-500 font-bold mb-0.5">فئة 5</label>
+              <input type="number" min="0" oninput="calcDenoms()" class="denom-input w-full border border-slate-300 rounded p-1 text-center text-xs" data-val="5">
+            </div>
+            <div class="text-center">
+              <label class="block text-[9px] text-slate-500 font-bold mb-0.5">فئة 1</label>
+              <input type="number" min="0" oninput="calcDenoms()" class="denom-input w-full border border-slate-300 rounded p-1 text-center text-xs" data-val="1">
+            </div>
+            <div class="text-center">
+              <label class="block text-[9px] text-slate-500 font-bold mb-0.5">فكة</label>
+              <input type="number" min="0" step="0.1" oninput="calcDenoms()" class="denom-input w-full border border-slate-300 rounded p-1 text-center text-xs" data-val="0.5">
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-0.5 text-[11px]">النقدي الموجود فعلياً بالدرج:</label>
+            <input type="number" step="0.01" min="0" id="close-actual-cash" oninput="calculateClosingForm()" placeholder="0.00" required class="w-full border-2 border-blue-600 rounded-lg p-2 text-base font-black text-slate-900 bg-white">
+          </div>
+        </div>
+
+        <!-- Difference Status -->
+        <div id="reconciliation-result-box" class="p-2.5 rounded-lg flex items-center justify-between border font-bold text-[11px]">
+          <div class="flex items-center gap-1.5">
+            <span id="reconciliation-icon"><i data-lucide="check-circle" class="w-4 h-4"></i></span>
+            <div>
+              <span id="reconciliation-title" class="block">الحالة: متطابق</span>
+              <span id="reconciliation-desc" class="text-[10px] font-normal">الرصيد الفعلي يطابق المتوقع تماماً.</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-[9px] block font-normal">الفرق:</span>
+            <span id="reconciliation-diff" class="text-sm font-black">0.00</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-0.5 text-[11px]">ملاحظات الإغلاق:</label>
+          <input type="text" id="close-notes" placeholder="ملاحظات توضيحية..." class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50">
+        </div>
+
+        <div class="pt-3 flex items-center justify-between border-t border-slate-100">
+          <button type="button" onclick="printClosingSlipPreview()" class="px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 transition flex items-center gap-1 text-[11px]">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+            <span>معاينة الإيصال</span>
+          </button>
+
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="closeModal('modal-close-shift')" class="px-3 py-1.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-100 transition text-xs">إلغاء</button>
+            <button type="submit" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-2xs text-xs">اعتماد الإغلاق</button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- MODAL: THERMAL RECEIPT (Z-REPORT PRINT)   -->
+  <!-- ========================================== -->
+  <div id="modal-receipt-print" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3 overflow-y-auto">
+    <div class="flex flex-col items-center max-w-xs w-full">
+      <div id="print-section" class="receipt-paper">
+        <div class="text-center pb-2 border-b border-dashed border-slate-300">
+          <img src="logo.jpg" alt="لوقو سيستم بحر" class="w-12 h-12 object-contain mx-auto mb-1 rounded-lg">
+          <h2 class="text-sm font-black text-slate-900" id="receipt-p-name">مطعم الضيافة العُمانية</h2>
+          <p class="text-[11px] text-slate-700 font-bold mt-0.5">تقرير إغلاق وردية (Z-REPORT)</p>
+          <p class="text-[10px] text-blue-700 font-bold">سيستم بحر للمالية والورديات</p>
+          <p class="text-[10px] text-slate-600 mt-0.5" id="receipt-p-datetime">2026/09/24 - 16:00</p>
+        </div>
+
+        <div class="py-1.5 border-b border-dashed border-slate-300">
+          <table class="receipt-table text-[11px]">
+            <tr>
+              <td class="label-col">الوردية:</td>
+              <td class="val-col" id="receipt-p-shift">صباحية</td>
+            </tr>
+            <tr>
+              <td class="label-col">الكاشير:</td>
+              <td class="val-col" id="receipt-p-cashier">أحمد</td>
+            </tr>
+            <tr>
+              <td class="label-col">العهدة الافتتاحية:</td>
+              <td class="val-col" id="receipt-p-custody">0.00 ر.ع</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="py-1.5 border-b border-dashed border-slate-300">
+          <table class="receipt-table text-[11px]">
+            <tr>
+              <td class="label-col">إجمالي المبيعات:</td>
+              <td class="val-col" id="receipt-p-sales">0.00 ر.ع</td>
+            </tr>
+            <tr>
+              <td class="label-col text-slate-600">- شبكة (بطاقة):</td>
+              <td class="val-col font-normal" id="receipt-p-card">0.00 ر.ع</td>
+            </tr>
+            <tr>
+              <td class="label-col text-slate-600">- الآجل:</td>
+              <td class="val-col font-normal" id="receipt-p-credit">0.00 ر.ع</td>
+            </tr>
+            <tr class="font-bold">
+              <td class="label-col">= مبيعات الكاش:</td>
+              <td class="val-col" id="receipt-p-cash">0.00 ر.ع</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="py-1.5 border-b border-dashed border-slate-300">
+          <table class="receipt-table text-[11px]">
+            <tr class="text-rose-700">
+              <td class="label-col">- المصروفات:</td>
+              <td class="val-col" id="receipt-p-expenses">0.00 ر.ع</td>
+            </tr>
+            <tr class="font-bold">
+              <td class="label-col">= النقدي المتوقع:</td>
+              <td class="val-col" id="receipt-p-expected">0.00 ر.ع</td>
+            </tr>
+            <tr class="font-bold">
+              <td class="label-col">= الفعلي بالدرج:</td>
+              <td class="val-col" id="receipt-p-actual">0.00 ر.ع</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="py-1.5 border-b border-dashed border-slate-300">
+          <table class="receipt-table text-[11px]">
+            <tr class="font-black text-xs">
+              <td class="label-col">الفرق (عجز/زيادة):</td>
+              <td class="val-col" id="receipt-p-diff">0.00 ر.ع</td>
+            </tr>
+            <tr class="font-bold">
+              <td class="label-col">حالة المطابقة:</td>
+              <td class="val-col" id="receipt-p-status">متطابق</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="pt-3 text-center text-[10px] text-slate-600 font-semibold space-y-1">
+          <p>توقيع الكاشير: ........................</p>
+          <p>توقيع الإدارة: ........................</p>
+        </div>
+      </div>
+
+      <div class="mt-3 flex items-center gap-2 no-print">
+        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-1.5 rounded-lg shadow-2xs flex items-center gap-1">
+          <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+          <span>طباعة</span>
+        </button>
+        <button onclick="closeModal('modal-receipt-print')" class="bg-slate-800 text-white font-bold text-xs px-4 py-1.5 rounded-lg">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- MODAL: NEW USER (إضافة مستخدم جديد)         -->
+  <!-- ========================================== -->
+  <div id="modal-new-user" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-white w-full max-w-sm rounded-xl shadow-xl border border-slate-200 overflow-hidden">
+      
+      <div class="bg-slate-50 border-b border-slate-200 p-3 flex items-center justify-between">
+        <h3 class="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+          <i data-lucide="user-plus" class="w-4 h-4 text-blue-600"></i>
+          إضافة حساب مستخدم / جهاز جديد
+        </h3>
+        <button onclick="closeModal('modal-new-user')" class="text-slate-400 hover:text-slate-600 p-1 rounded-md">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="form-new-user" onsubmit="handleNewUserSubmit(event)" class="p-4 space-y-2.5 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-0.5">اسم المستخدم للدخول (Username):</label>
+          <input type="text" id="user-new-username" placeholder="مثال: cashier2 أو ahmed" required class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50 font-bold">
+          <p class="text-[10px] text-slate-400 mt-0.5">يُفضل باللغة الإنجليزية بدون مسافات</p>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-0.5">كلمة المرور (Password):</label>
+          <input type="password" id="user-new-password" placeholder="••••••••" required class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50 font-bold">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-0.5">الاسم الظاهر بالكامل:</label>
+          <input type="text" id="user-new-fullname" placeholder="مثال: كاشير الوردية المسائية أو أحمد علي" required class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-0.5">الصلاحية ونوع الحساب:</label>
+          <select id="user-new-role" required class="w-full border border-slate-300 rounded-lg p-1.5 text-xs bg-slate-50 font-bold text-slate-800">
+            <option value="cashier">كاشير (تسجيل ورديات ومصروفات فقط بدون حذف)</option>
+            <option value="owner">صاحب المطعم (مراقبة وتقارير شهرية وإحصائيات)</option>
+            <option value="admin">مدير عام (صلاحية كاملة لجميع الأقسام والإعدادات)</option>
+          </select>
+        </div>
+
+        <div class="pt-3 flex items-center justify-end gap-1.5 border-t border-slate-100">
+          <button type="button" onclick="closeModal('modal-new-user')" class="px-3 py-1.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-100 transition text-xs">إلغاء</button>
+          <button type="submit" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-2xs text-xs">إنشاء الحساب</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL: IMAGE PREVIEW                       -->
+  <!-- ========================================== -->
+  <div id="modal-image-preview" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xs z-50 hidden flex items-center justify-center p-3" onclick="closeModal('modal-image-preview')">
+    <div class="max-w-md max-h-[85vh] p-2 bg-white rounded-xl overflow-hidden shadow-2xl relative" onclick="event.stopPropagation()">
+      <button onclick="closeModal('modal-image-preview')" class="absolute top-3 left-3 bg-slate-900/80 text-white p-1.5 rounded-full hover:bg-slate-900 transition">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+      <img id="modal-image-src" src="" class="w-full h-auto max-h-[80vh] object-contain rounded-lg">
+    </div>
+  </div>
+
+
+  <!-- Clean Compact Footer -->
+  <footer class="bg-white border-t border-slate-200 py-2.5 text-center text-[11px] text-slate-400 mt-6 flex items-center justify-center gap-1.5">
+    <img src="logo.jpg" alt="سيستم بحر" class="w-4 h-4 object-contain rounded">
+    <span>نظام إدارة المالية والورديات للمطاعم — مدعوم بواسطة <strong>سيستم بحر (BAHR SYSTEM)</strong> © 2026</span>
+  </footer>
+
+  <!-- App Logic JS -->
+  <script src="app.js"></script>
+</body>
+</html>
